@@ -8,7 +8,7 @@ if not exist "%CSC%" (
   pause
   exit /b 1
 )
-"%CSC%" /nologo /target:winexe /r:System.Windows.Forms.dll /out:"%~dp0DoctorPc.exe" "%~dp0DoctorPc_src.cs"
+"%CSC%" /nologo /target:winexe /r:System.Windows.Forms.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /out:"%~dp0DoctorPc.exe" "%~dp0DoctorPc_src.cs"
 if errorlevel 1 (
   echo.
   echo GRESKA pri kompajliranju. Pogledaj poruku iznad.

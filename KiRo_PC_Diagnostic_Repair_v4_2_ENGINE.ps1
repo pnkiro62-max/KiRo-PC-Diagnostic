@@ -1,6 +1,6 @@
 ﻿#requires -version 5.1
 <#
- KiRo PC Diagnostic & Repair v4.1 GUI
+ KiRo PC Diagnostic & Repair v4.2 GUI
  Windows 10/11
 
  PRINCIP:
@@ -21,7 +21,7 @@ param(
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 # Naslov konzole odmah kaze koji je modul otvoren (da se ne pomesa sa glavnim GUI-em).
 try {
-    $wTitle = if ($Action) { "KiRo v4.1 - ALATI: $Action" } else { "KiRo PC Diagnostic & Repair v4.1" }
+    $wTitle = if ($Action) { "KiRo v4.2 - ALATI: $Action" } else { "KiRo PC Diagnostic & Repair v4.2" }
     $Host.UI.RawUI.WindowTitle = $wTitle
 } catch {}
 
@@ -148,7 +148,7 @@ function Write-Header {
     try { Clear-Host } catch {}
     Write-Host ""
     Write-Host "====================================================================" -ForegroundColor Cyan
-    Write-Host "            KiRo PC DIAGNOSTIC & REPAIR  v4.1 GUI" -ForegroundColor Cyan
+    Write-Host "            KiRo PC DIAGNOSTIC & REPAIR  v4.2 GUI" -ForegroundColor Cyan
     Write-Host "====================================================================" -ForegroundColor Cyan
     Write-Host "     PRVO SKENIRA  ->  PRIKAZE PROBLEME  ->  TI BIRAS POPRAVKU" -ForegroundColor DarkCyan
     Write-Host ""
@@ -1786,7 +1786,7 @@ Show-ScanProgress "15/15 Sistemska zastita, WMI i zakljucani alati"
 try { Scan-SystemTamperIndicators } catch {}
 
     # 16. Pluginovi (v4.2) - automatski ucitani moduli iz foldera Plugins/
-    Show-ScanProgress "Dodatni modulski skenovi: Pluginovi (Plugins/)"
+    Show-ScanProgress "16/16 Dodatni modulski skenovi: Pluginovi (Plugins/)"
     try {
         $pluginRan = Invoke-KiRoPluginScans
         $script:ScanDetails["Ucitani plugini"] = $script:Plugins.Count

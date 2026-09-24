@@ -1,0 +1,203 @@
+KiRo PC Diagnostic & Repair v4.2 GUI
+====================================
+
+POKRETANJE
+1. Otvori folder u kome je ovaj fajl (DOCTOR PC).
+2. Pokreni POKRENI_KiRo_PC_Diagnostic_v4_2_GUI.bat.
+3. Prihvati Administrator/UAC pitanje.
+4. Otvara se Windows prozor. Crni PowerShell prozor vise nije potreban
+   ni za jedan modul osim "PUN KONZOLNI MENI".
+
+Vazno: folder Plugins/ mora ostati pored ENGINE i GUI fajla. Ako se
+premesti, v4.2 radi normalno, samo nece ucitati dodatne module.
+
+
+STA JE NOVO U ODNOSU NA v4.1
+1. PLUGIN SISTEM - program sada sam otkriva module iz foldera Plugins/.
+   Svaki .ps1 fajl u tom folderu je jedan modul koji moze da doda svoje
+   nalaze u glavnu tabelu. Dodato je i cetvrto dugme PLUGINI.
+2. Sken ima i 16. korak (Pluginovi), pa su nalazi iz modula vidljivi
+   odmah posle SKENIRAJ - nema posebnog pokretanja.
+3. Dva modula dolaze uz program:
+     System Uptime          - koliko dugo racunar radi bez restarta
+     Driver / Device Health - uredjaji sa greskom u Device Manager-u
+   Oba su SAMO ZA CITANJE (nista ne popravljaju i nista ne brisu).
+4. Sve ostalo iz v4.1 ostaje isto (KARANTIN, ALATI, Safety Snapshot, UNDO).
+
+
+PLUGIN SISTEM (NOVO U v4.2)
+---------------------------
+Gde stoje moduli:
+  Plugins\*.ps1       (pored KiRo_PC_Diagnostic_Repair_v4_2_ENGINE.ps1)
+
+Sta modul radi:
+  - pri startu programa svaki modul se ucita automatski
+  - modul moze da doda nalaz u glavnu tabelu (kao da ga je nasao glavni sken)
+  - modul moze, opciono, da ponudi i popravku
+
+Kako se koristi:
+  1. Klikni PLUGINI u glavnoj traci. Dobijas tabelu: Naziv, Autor, Opis,
+     Popravka (DA/NE).
+  2. Klikni POKRENI SVE PLUGINE - pokrecu se skenovi svih modula, nalazi
+     se dodaju u glavnu tabelu i prozor se zatvara.
+  3. Ili samo klikni SKENIRAJ - korak 16 pokrece iste module.
+
+Ako nema nijednog modula, PLUGINI javi: "Nema ucitanih plugina."
+
+KAKO NAPISATI SVOJ MODUL (za one koji znaju PowerShell)
+  Napravi fajl Plugins\Moj-Modul.ps1 sa sadrzinom:
+
+    Register-KiRoPlugin -Name 'Moj Modul' -Author 'Ja' `
+        -Description 'Sta modul proverava' -ScanScript {
+            Add-Finding 'INFO' 'Moja kategorija' 'Sta je nadjeno' 'Sta da se radi'
+    }
+
+  - Add-Finding prima redom: Severity (KRITICNO / UPOZORENJE / INFO),
+    Category, Problem, Recommendation, i opciono FixAction i SafeAutoFix.
+  - Ako modul nudi popravku, doda se i -RepairScript { ... }.
+  - Modul se ucitava pri sledecem startu programa; nista drugo se ne dira.
+  - Ako modul pukne, ostali moduli i program nastavljaju da rade, a greska
+    se prijavi kao nalaz UPOZORENJE.
+
+
+SVE JE NA JEDNOM EKRANU
+Gore su 4 dugmeta, ispod njih traka sa porukama, ispod tabela sa
+pronadjenim problemima, a na dnu statusna linija.
+
+  SKENIRAJ          - proveri racunar (16 koraka, ukljucujuci module)
+  POPRAVI OZNACENO  - ocisti / popravi samo ono sto je oznaceno
+  ALATI             - dodatni moduli + SNAPSHOT, UNDO i LOGOVI
+  PLUGINI           - lista dodatnih modula i pokretanje svih odjednom
+
+Kada se mis zadrzi na dugmetu, pojavi se objasnjenje sta to dugme radi.
+
+
+TRI NIVOA POPRAVKE (najvaznije pravilo)
+---------------------------------------
+NIVO 1 - BEZBEDNO, PROGRAM RADI SAM
+  Pokvarene autostart stavke, pokvarene Startup precice, orphan servisi i
+  zakazani zadaci, TEMP, Event Log, Microsoft zadatak, Defender real-time.
+  Ove stavke su u tabeli VEC oznacene. Klikni POPRAVI OZNACENO, potvrdi na
+  DA, POPRAVI - program pravi Safety Snapshot i radi u pozadini.
+  Nista se ne brise trajno: sve ide u backup i moze da se vrati (UNDO).
+
+NIVO 2 - ALAT, PROGRAM GA NUDI JEDNIM KLIKOM
+  DISM/SFC popravka Windowsa, Defender popravka (definicije + pretnje +
+  real-time zastita), ciscenje Security loga.
+  Ako oznacis takvu stavku i kliknes POPRAVI OZNACENO, u traci se pojavi
+  dugme alata (npr. POKRENI DISM / SFC). Jedan klik i alat radi u
+  pozadini sa stopericom i izvestajem na kraju. Konzola se ne otvara.
+
+NIVO 3 - MALWARE / TELEGRAM, TI ODLUCUJES STAVKU PO STAVKU
+  NIKAD se ne brise automatski iz glavne tabele. Otvara se prozor
+  KARANTIN gde ti biras sta ide u karantin, sta se brise, a sta je
+  tvoj poznati fajl (whitelist).
+
+
+KAKO SE KORISTI (3 koraka)
+1. Klikni SKENIRAJ i sacekaj (5-10 s, radi u pozadini pa prozor zivi).
+2. Pogledaj tabelu. Bezbedne stavke su vec oznacene; oznaku mozes da
+   skines. Dvoklik na red daje detalje i preporuku.
+3. Klikni POPRAVI OZNACENO, pa potvrdi na DA, POPRAVI.
+   Ako se umesto potvrde pojave dugmad alata, znaci da oznacene stavke
+   idu preko alata - klikni odgovarajuce dugme.
+
+
+POTVRDA POPRAVKE
+Kada kliknes POPRAVI OZNACENO, u traci se pojave poruka i dva dugmeta:
+
+  DA, POPRAVI   - pokrece popravku
+  NE            - otkazuje, nista se ne menja
+
+U statusnoj liniji pise TACNO STA ce se popraviti. Ako ne potvrdis u roku
+od 20 sekundi, potvrda isece i nista se ne menja. Nema skacucih dijaloga.
+
+
+SIGNALIZACIJA - STA SE TRENUTNO DESAVA
+Sve poruke se vide u traci ispod dugmadi i u statusnoj liniji.
+
+  sivo        - obicna informacija
+  zeleno      - posao je uspesno zavrsen
+  narandzasto - obrati paznju (npr. nista nije oznaceno, potvrda istekla)
+  crveno      - greska
+
+Dok posao traje vidi se: dugme POPRAVLJAM..., spiner (| / - \), tekst
+koraka, broj koraka (npr. 3/16) i stoperica.
+
+
+PROZOR KARANTIN (ALATI -> MALWARE / TELEGRAM)
+Tabela sumnjivih fajlova i procesa. Za svaki red pise:
+
+  Rizik               VISOK / SREDNJI / NIZI (ocena 0-10+)
+  Naziv i Putanja     gde se fajl nalazi
+  Zasto je sumnjivo   npr. "izvrsni fajl u Telegram folderu koji nije
+                      Telegram; digitalni potpis: NotSigned; skriven fajl"
+  Potpis              Valid / NotSigned / ...
+
+Dugmad:
+  KARANTIN  - premesta oznacene fajlove u
+              Documents\KiRo_PC_Diagnostic_Logs\Quarantine.
+              NE brise ih - UNDO moze da ih vrati. OVO JE PREPORUCENO.
+  OBRISI    - trajno brise. Trazi DRUGI klik na isto dugme za potvrdu
+              (dugme se zove POTVRDI BRISANJE, 12 s da se predomislis).
+  DOZVOLI   - upisuje fajl na listu dozvoljenih (vise se ne prikazuje).
+              Koristi za svoje poznate programe koje KiRo sumnjici.
+  OSVEZI    - ponovo trazi sumnjive fajlove.
+  ZATVORI   - zatvara prozor (glavni prozor ostaje otvoren).
+
+Dvoklik na red daje sve detalje: putanju, ocenu, izvor, potpis,
+velicinu i razlog.
+
+Poznate Windows/Microsoft/Realtek stavke se i dalje filtriraju kada su na
+ocekivanim lokacijama, da ne bi bilo lazno uzbunjivanja.
+
+
+PROZOR ALATI
+Otvara se klikom na ALATI.
+
+  MALWARE / TELEGRAM  - prozor KARANTIN (vidi iznad)
+  DUBINSKA PROVERA    - indikatori u glavnoj tabeli (nista ne brise)
+  WINDOWS POPRAVKA    - DISM CheckHealth u pozadini; ako Windows kaze da
+                        treba popravka, pokrece se i SFC
+  PERFORMANSA         - startup, pozadinski procesi, RAM (konzolni modul)
+  EKRAN               - najveci Hz / FPS (konzolni modul)
+  DEFENDER POPRAVKA   - definicije + pretnje + real-time zastita u pozadini
+  PUN KONZOLNI MENI   - sve opcije; ovde se izbor kuca
+  SNAPSHOT            - rucni Safety Snapshot (bez popravke)
+  UNDO                - vrati poslednju KiRo izmenu
+  LOGOVI              - otvori folder sa logovima i backup-om
+  ZATVORI             - zatvori ALATI (glavni prozor ostaje otvoren)
+
+
+IZVESTAJ POSLE SVAKOG POSLA
+Bilo da je u pitanju popravka, karantin ili alat, na kraju se otvara
+prozor sa izvestajem: sta je radjeno, koliko je trajalo, uspesno /
+neuspesno i stavka po stavka. Isti izvestaj se upisuje i u
+KiRo_popravke.log. U statusu pise npr.
+  "KARANTIN zavrseno: 2 stavke za 3.1 s."
+  "Alat gotov za 45.2 s.  DISM CheckHealth: Healthy..."
+
+
+SAFETY / UNDO
+- Pre svake popravke automatski se pravi Safety Snapshot.
+- UNDO vraca poslednju bezbednu izmenu (premestenu Startup precicu,
+  fajl iz karantina...).
+- Registry, servis i Scheduled Task backup ostaju u
+  Documents\KiRo_PC_Diagnostic_Logs za rucni povratak.
+
+
+LOGOVI I BACKUP
+Documents\KiRo_PC_Diagnostic_Logs
+  KiRo_Diagnostic_<datum>.txt        - transkript rada
+  KiRo_popravke.log                  - izvestaj posle svakog posla
+  Repair_Backup_<datum>\             - backup pre popravke
+    startup_repair_backup.jsonl      - svaka premestena/brisana stavka
+  Safety_Snapshots\<datum>\          - Safety Snapshot
+  Quarantine\<datum>\                - stavke u karantinu
+  malware_whitelist.jsonl            - fajlovi koje si dozvolio
+  KiRo_GUI_error.log                 - samo ako je GUI pukao
+
+
+AUTOMATSKI U POKRETANJU
+- KiRo ne dodaje nista u Windows Startup.
+- Sta se samo pokrece uz Windows prikazuje sken (korak 9).
