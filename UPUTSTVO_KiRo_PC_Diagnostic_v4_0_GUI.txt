@@ -1,0 +1,137 @@
+KiRo PC Diagnostic & Repair v4.0 GUI
+====================================
+
+POKRETANJE
+1. Otvori folder kiro_v40.
+2. Pokreni POKRENI_KiRo_PC_Diagnostic_v4_0_GUI.bat.
+3. Prihvati Administrator/UAC pitanje.
+4. Otvara se Windows prozor. Crni PowerShell prozor se ne koristi za glavni rad.
+
+
+SVE JE NA JEDNOM EKRANU
+Program nema kartice. Gore su 3 dugmeta, ispod njih traka sa porukama,
+ispod tabele sa pronadjenim problemima, a na dnu statusna linija.
+
+  SKENIRAJ          - proveri racunar (15 koraka)
+  POPRAVI OZNACENO  - ocisti / popravi samo ono sto je oznaceno
+  ALATI             - dodatni moduli + SNAPSHOT, UNDO i LOGOVI
+
+Kada se mis zadrzi na dugmetu, pojavi se objasnjenje sta to dugme radi.
+
+
+KAKO SE KORISTI (3 koraka)
+1. Klikni SKENIRAJ i sacekaj. Sken traje oko 5-10 sekundi i radi u pozadini,
+   pa prozor ostaje upotrebljiv i prikazuje napredak (korak, stoperica, traka).
+2. Pogledaj tabelu. Stavke koje su bezbedne za automatsku popravku su
+   ODMAH oznacene (kucica u prvom stupcu). Oznaku mozes da skines ako
+   neku stavku ne zelis da diras. Dvoklik na red otvara detalje i preporuku.
+3. Klikni POPRAVI OZNACENO, pa potvrdi na DA, POPRAVI.
+
+
+POTVRDA POPRAVKE
+Kada kliknes POPRAVI OZNACENO, u traci se pojave poruka i dva dugmeta:
+
+  DA, POPRAVI   - pokrece popravku
+  NE            - otkazuje, nista se ne menja
+
+U statusnoj liniji pise TACNO STA ce se popraviti, npr.
+"Cekam potvrdu: 2 stavke -> Izvozim i praznim Event Log (Application)
+ + Premestam pokvarenu Startup precicu u backup (pokvaren.lnk)".
+
+Ako ne potvrdis u roku od 20 sekundi, potvrda isece i nista se ne menja.
+Nema skacucih dijaloga, pa nista ne moze da blokira prozor.
+
+
+SIGNALIZACIJA - STA SE TRENUTNO DESAVA
+Sve poruke se vide na dva mesta: u traci ispod dugmadi i u statusnoj liniji.
+
+Traka menja boju teksta:
+  sivo        - obicna informacija
+  zeleno      - posao je uspesno zavrsen
+  narandzasto - obrati paznju (npr. nista nije oznaceno, potvrda istekla)
+  crveno      - greska
+
+Dok posao traje, vidi se:
+  - dugme pise POPRAVLJAM... (ili se sken prikazuje kao Skeniram...)
+  - spiner (| / - \) tako da se zna da program radi
+  - tekst koraka (npr. "Premestam pokvarenu Startup precicu u backup (x.lnk)")
+  - broj koraka (npr. 3/15)
+  - stoperica u sekundama
+
+
+IZVESTAJ POSLE POPRAVKE
+Kada se popravka zavrsi:
+- Otvori se prozor "KiRo - Izvestaj popravke" sa stavkom po stavkom:
+  sta je uradjeno, da li je uspelo i poruka za svaku stavku.
+- U statusu pise npr.
+  "Popravka zavrsena: 1 stavka za 1.7 s.  Uspesno 1/1.  Snapshot: 20260923_191841."
+- Ako je nesto neuspesno, to pise crveno, npr.
+  "Popravka zavrsena: uspesno 0, NEUSPESNO 1 od 1 za 2.4 s."
+- Izvestaj se cuva i u fajlu KiRo_popravke.log u folderu sa logovima.
+- KiRo zatim sam pokrece novi sken i sa liste uklanja ono sto je reseno.
+
+
+SAFETY / UNDO
+- Pre svake popravke automatski se pravi Safety Snapshot (ne treba kliktati).
+- Snapshot cuva trenutno stanje pronadjenih problema, Startup registry podatke,
+  relevantne Scheduled Task XML kopije i KiRo podesavanja.
+- Rucni SNAPSHOT i UNDO su u prozoru ALATI.
+- UNDO vraca poslednju bezbednu izmenu (npr. premestenu Startup precicu ili
+  stavku iz Malware karantina) i to pise u statusu.
+- Registry, servis i Scheduled Task backup ostaju u
+  Documents\KiRo_PC_Diagnostic_Logs za rucni povratak ako ikada zatreba.
+
+
+PROZOR ALATI
+Otvara se klikom na ALATI. Svi moduli se biraju klikom (nista se ne kuca).
+Kada se mis zadrzi na dugmetu, pise sta taj modul radi.
+
+  MALWARE / TELEGRAM  - karantin, brisanje, whitelist
+  DUBINSKA PROVERA    - samo indikatori, nista se ne brise
+  WINDOWS POPRAVKA    - DISM / SFC
+  PERFORMANSA         - startup, pozadinski procesi, RAM
+  EKRAN               - najveci Hz / FPS
+  DEFENDER PROVERE    - ukljuci / iskljuci
+  PUN KONZOLNI MENI   - sve opcije (prvo sken, pa meni)
+  SNAPSHOT            - rucni Safety Snapshot (bez popravke)
+  UNDO                - vrati poslednju KiRo izmenu
+  LOGOVI              - otvori folder sa logovima i backup-om
+  ZATVORI             - zatvori ALATI (glavni prozor ostaje otvoren)
+
+
+MALWARE / TELEGRAM
+- Nalazi kategorija Malware, Telegram i Zastita se NIKADA ne popravljaju
+  automatski - KiRo ih samo prikazuje da se nista ne obrise pogresno.
+- Za karantin / brisanje / whitelist otvori ALATI -> MALWARE / TELEGRAM.
+  K = karantin, D = trajno brisanje, W = whitelist.
+- Karantin je preporucen kada nisi potpuno siguran (moze da se vrati).
+- Poznate Windows/Microsoft/Realtek stavke se filtriraju kada su na
+  ocekivanim lokacijama, da ne bi bilo lazno uzbunjivanja.
+
+
+WINDOWS POPRAVKA
+- QUICK radi brzu DISM CheckHealth proveru.
+- DUBINSKA koristi ScanHealth/RestoreHealth/SFC samo kada je potrebno.
+- KiRo ne preuzima ownership niti menja ACL zastitenih Microsoft taskova.
+
+
+EKRAN / FPS
+- Menja se samo Hz osvezavanje.
+- Rezolucija se ne menja.
+
+
+LOGOVI I BACKUP
+Documents\KiRo_PC_Diagnostic_Logs
+  KiRo_Diagnostic_<datum>.txt        - transkript rada
+  KiRo_popravke.log                  - izvestaj posle svake popravke
+  Repair_Backup_<datum>\             - backup pre popravke
+    startup_repair_backup.jsonl      - svaka premestena/brisana stavka
+  Safety_Snapshots\<datum>\          - Safety Snapshot
+  Quarantine\<datum>\                - stavke u karantinu
+  KiRo_GUI_error.log                 - samo ako je GUI pukao
+
+
+AUTOMATSKI U POKRETANJU
+- KiRo ne dodaje nista u Windows Startup.
+- Ako te zanima sta se samo pokrece uz Windows, to prikazuje sken
+  (korak 9: Startup, autostart greske i zakazani zadaci).

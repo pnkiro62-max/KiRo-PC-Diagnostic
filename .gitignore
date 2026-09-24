@@ -1,0 +1,23 @@
+# Radni / scratch fajlovi (probe skripte, patch-evi, snimci ekrana sa testova)
+_kiro_rad/
+_shots7/
+_shots8/
+_obs*.txt
+
+# WorkBuddy AI podaci sesije (memorija, privremeno)
+.workbuddy-ai/
+
+# Build artefakti
+*.exe
+*.dll
+*.pdb
+*.msi
+bin/
+obj/
+
+# Windows đubre
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.lnk
+$RECYCLE.BIN/
