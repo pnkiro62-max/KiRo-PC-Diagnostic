@@ -1,5 +1,15 @@
 @echo off
 chcp 65001 >nul
+
+REM Git i GCM dolaze u WorkBuddy-evom PortableGit-u, koji nije na sistemskom
+REM PATH-u. Dodajemo bin direktorijum pre poziva.
+set "GITBIN=%USERPROFILE%\.workbuddy-ai\binaries\PortableGit\versions\mingw64\bin"
+if not exist "%GITBIN%\git.exe" (
+  REM Ako se verzija promeni, probaj automatski da je nadjes
+  for /d %%D in ("%USERPROFILE%\.workbuddy-ai\binaries\PortableGit\versions\*") do set "GITBIN=%%~fD\mingw64\bin"
+)
+set "PATH=%GITBIN%;%PATH%"
+
 cd /d "%~dp0"
 
 set GHUSER=pnkiro62-max
