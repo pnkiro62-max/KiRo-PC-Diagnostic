@@ -18,6 +18,35 @@ trap {
     exit 1
 }
 
+# --- hvata i WinForms ThreadException (standardni "Unhandled exception" dijalog).
+# --- PowerShell-ov `trap` to NE hvata (to je .NET, ne PS terminating error).
+# --- Loguje stack u Documents\KiRo_PC_Diagnostic_Logs\KiRo_GUI_error.log
+# --- i potiskuje WinForms "Unhandled exception" dijalog (e.Handled = $true).
+function Write-KiRoGuiError($tag, $ex) {
+    try {
+        $lg = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'KiRo_PC_Diagnostic_Logs'
+        New-Item -ItemType Directory -Force -Path $lg | Out-Null
+        $p = Join-Path $lg 'KiRo_GUI_error.log'
+        $st = if ($ex.ScriptStackTrace) { $ex.ScriptStackTrace } elseif ($ex.StackTrace) { $ex.StackTrace } else { '' }
+        $line = '[' + (Get-Date).ToString('s') + '] ' + $tag + ': ' + $ex.Exception.GetType().FullName + ': ' + $ex.Exception.Message + [Environment]::NewLine + $st
+        Add-Content -LiteralPath $p -Value $line -Encoding UTF8
+    } catch {}
+}
+try {
+    [System.Windows.Forms.Application]::add_ThreadException([System.Threading.ThreadExceptionEventHandler]{
+        param($s,$e)
+        Write-KiRoGuiError 'THREAD' $e.Exception
+        try { $e.Handled = $true } catch {}
+    })
+} catch {}
+try {
+    [System.AppDomain]::CurrentDomain.add_UnhandledException([System.UnhandledExceptionEventHandler]{
+        param($s,$e)
+        $ex = if ($e.ExceptionObject -is [Exception]) { $e.ExceptionObject } else { [Exception]::new([string]$e.ExceptionObject) }
+        Write-KiRoGuiError 'UNHANDLED' $ex
+    })
+} catch {}
+
 function Ensure-GuiAdmin {
     $id = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($id)
