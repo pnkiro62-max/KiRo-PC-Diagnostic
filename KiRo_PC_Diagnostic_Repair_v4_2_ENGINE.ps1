@@ -133,18 +133,12 @@ function Load-KiRoPlugins {
 }
 
 function Invoke-KiRoPluginScans {
+    # Nalaz po pluginu se DODAJE u $script:Findings (bez brisanja prethodnih plugin
+    # nalaza). Time korisnik uvek vidi rast tabele kad klikne "POKRENI SVE PLUGINE",
+    # i nema rizika od "Dodato nalaza: -2" ako novi sken iz nekog razloga ne doda
+    # nista. Source='Plugin' tag (setovan u Add-Finding preko _KiRoInPluginScan)
+    # se i dalje koristi da Complete-KiRoJob sacuva plugin nalaze kroz glavni sken.
     $ran = 0
-    # Ukloni prethodne plugin nalaze (Source='Plugin') da ne bi bilo duplikata
-    # pri vise pokretanja "POKRENI SVE PLUGINE". Ostavi sken nalaze netaknute.
-    if ($script:Findings -and $script:Findings.Count -gt 0) {
-        $kept = New-Object System.Collections.ArrayList
-        foreach ($f in @($script:Findings)) {
-            if (-not ($f.PSObject.Properties['Source'] -and [string]$f.Source -eq 'Plugin')) {
-                [void]$kept.Add($f)
-            }
-        }
-        $script:Findings = $kept
-    }
     $script:_KiRoInPluginScan = $true
     foreach ($p in @($script:Plugins)) {
         if ($p.ScanScript) {
