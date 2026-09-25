@@ -460,6 +460,16 @@ $colFix.ReadOnly = $true
 $colFix.SortMode = 'NotSortable'
 [void]$grid.Columns.Add($colFix)
 
+# Kolona "Izvor" razlikuje plugin nalaze (od POKRENI SVE PLUGINE / 16. koraka)
+# od sken nalaza - bez ovoga korisnik ne moze da vizuelno potvrdi da su se
+# pluginovi izvrsili (svi redovi bi izgledali isto, INFO).
+$colIzvor = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
+$colIzvor.HeaderText = 'Izvor'
+$colIzvor.Width = 72
+$colIzvor.ReadOnly = $true
+$colIzvor.SortMode = 'NotSortable'
+[void]$grid.Columns.Add($colIzvor)
+
 # ---------------------------------------------------------------- statusna traka
 $statusStrip = New-Object System.Windows.Forms.StatusStrip
 $statusStrip.BackColor = Col $C.Card
@@ -676,7 +686,10 @@ function Populate-KiRoGrid {
         # POPRAVI OZNACENO odmah ima smisla. Korisnik moze da skine oznaku.
         $checked = [bool]($f.SafeAutoFix -and $f.FixAction -and
                           ($script:KiRoAllowedFixes -contains [string]$f.FixAction))
-        $idx = $grid.Rows.Add($checked,$f.ID,$f.Severity,$f.Category,$f.Problem,$fixable)
+        # Izvor: "Plugin" ako je Source=='Plugin', inace "Sken". Stari nalazi
+        # bez Source polja postaju "Sken".
+        $src = if ($f.PSObject.Properties['Source'] -and [string]$f.Source -eq 'Plugin') { 'Plugin' } else { 'Sken' }
+        $idx = $grid.Rows.Add($checked,$f.ID,$f.Severity,$f.Category,$f.Problem,$fixable,$src)
         $grid.Rows[$idx].Tag = $f
 
         $sevCol = switch ([string]$f.Severity) {
@@ -690,6 +703,14 @@ function Populate-KiRoGrid {
         $grid.Rows[$idx].Cells[5].Style.ForeColor = Col $(if ($fixable -eq 'DA') { $C.Ok } else { $C.Muted })
         $grid.Rows[$idx].Cells[5].Style.Alignment = 'MiddleCenter'
         $grid.Rows[$idx].Cells[0].Style.Alignment = 'MiddleCenter'
+        # Izvor kolona: "Plugin" je naglasen (akcent + bold) da se odmah razlikuje.
+        $grid.Rows[$idx].Cells[6].Style.Alignment = 'MiddleCenter'
+        if ($src -eq 'Plugin') {
+            $grid.Rows[$idx].Cells[6].Style.ForeColor = Col $C.Accent
+            $grid.Rows[$idx].Cells[6].Style.Font = New-Object System.Drawing.Font('Segoe UI Semibold',9.5)
+        } else {
+            $grid.Rows[$idx].Cells[6].Style.ForeColor = Col $C.Muted
+        }
     }
 
     $n = @($script:Findings).Count
@@ -703,7 +724,8 @@ function Populate-KiRoGrid {
     $fixa = @($script:Findings | Where-Object { $_.SafeAutoFix -and $_.FixAction }).Count
     $chk = @($script:Findings | Where-Object { $_.SafeAutoFix -and $_.FixAction -and
               ($script:KiRoAllowedFixes -contains [string]$_.FixAction) }).Count
-    $summaryLabel.Text = "Nalaza: $n    KRITICNO: $krit    UPOZORENJE: $upoz    Malware/Telegram: $malw    Za popravku: $fixa    Oznaceno: $chk"
+    $plug = (@($script:Findings | Where-Object { $_.PSObject.Properties['Source'] -and [string]$_.Source -eq 'Plugin' })).Count
+    $summaryLabel.Text = "Nalaza: $n    KRITICNO: $krit    UPOZORENJE: $upoz    Malware/Telegram: $malw    Za popravku: $fixa    Oznaceno: $chk    Plugin: $plug"
 }
 
 function Renumber-KiRoFindings {
