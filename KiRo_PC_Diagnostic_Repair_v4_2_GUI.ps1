@@ -1910,7 +1910,10 @@ function Show-KiRoPluginsForm {
     $null = $pg.Columns.Add('cDesc','Opis')
     $null = $pg.Columns.Add('cRep','Popravka')
     foreach ($p in @($script:Plugins)) {
-        [void]$pg.Rows.Add($p.Name, $p.Author, $p.Description, (if ($p.HasRepair) { 'DA' } else { 'NE' }))
+        # NAPOMENA: (if ...) NE sme ovde - PowerShell ne dozvoljava 'if' kao izraz u obicnim
+        # zagradama (runtime: "The term 'if' is not recognized"), iako parser to pusti.
+        $rep = if ($p.HasRepair) { 'DA' } else { 'NE' }
+        [void]$pg.Rows.Add($p.Name, $p.Author, $p.Description, $rep)
     }
 
     $btnRun = New-TopButton 'POKRENI SVE PLUGINE' 190 $C.Accent $C.HeadText $C.AccentDk $C.AccentDk ''
