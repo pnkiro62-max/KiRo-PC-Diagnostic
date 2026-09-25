@@ -139,11 +139,23 @@ function Invoke-KiRoPluginScans {
     # nista. Source='Plugin' tag (setovan u Add-Finding preko _KiRoInPluginScan)
     # se i dalje koristi da Complete-KiRoJob sacuva plugin nalaze kroz glavni sken.
     $ran = 0
+    $logp = $null
+    try {
+        $lg = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'KiRo_PC_Diagnostic_Logs'
+        New-Item -ItemType Directory -Force -Path $lg | Out-Null
+        $logp = Join-Path $lg 'KiRo_plugin.log'
+        Add-Content -LiteralPath $logp -Value ((Get-Date).ToString('s') + '  Invoke-KiRoPluginScans start: plugins=' + $script:Plugins.Count) -Encoding UTF8
+    } catch {}
     $script:_KiRoInPluginScan = $true
     foreach ($p in @($script:Plugins)) {
         if ($p.ScanScript) {
-            try { & $p.ScanScript } catch {
+            try {
+                if ($logp) { Add-Content -LiteralPath $logp -Value ((Get-Date).ToString('s') + '  run: ' + $p.Name) -Encoding UTF8 }
+                & $p.ScanScript
+                if ($logp) { Add-Content -LiteralPath $logp -Value ((Get-Date).ToString('s') + '  ok: ' + $p.Name + ' findingsNow=' + $script:Findings.Count) -Encoding UTF8 }
+            } catch {
                 Add-Finding 'UPOZORENJE' 'Plugin' ('Plugin ''' + $p.Name + ''' nije uspeo u skeniranju: ' + $_.Exception.Message) 'Proveri plugin kod.' '' $false
+                if ($logp) { Add-Content -LiteralPath $logp -Value ((Get-Date).ToString('s') + '  ERR: ' + $p.Name + ': ' + $_.Exception.Message) -Encoding UTF8 }
             }
             $ran++
         }
