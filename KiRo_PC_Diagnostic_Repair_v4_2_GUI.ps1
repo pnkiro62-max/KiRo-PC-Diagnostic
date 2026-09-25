@@ -1922,17 +1922,40 @@ function Show-KiRoPluginsForm {
         [void]$pg.Rows.Add($p.Name, $p.Author, $p.Description, $rep)
     }
 
+    $lblRun = New-Object System.Windows.Forms.Label
+    $lblRun.Dock = 'Bottom'
+    $lblRun.Height = 22
+    $lblRun.Text = ''
+    $lblRun.TextAlign = 'MiddleCenter'
+    $lblRun.ForeColor = Col $C.Muted
+    $lblRun.BackColor = Col $C.Card
+    $pf.Controls.Add($lblRun)
+
     $btnRun = New-TopButton 'POKRENI SVE PLUGINE' 190 $C.Accent $C.HeadText $C.AccentDk $C.AccentDk ''
     $btnRun.Dock = 'Bottom'
     $btnRun.Margin = New-Object System.Windows.Forms.Padding(0)
     $btnRun.Add_Click({
         try {
+            $before = @($script:Findings).Count
             $n = Invoke-KiRoPluginScans
+            $after = @($script:Findings).Count
             Populate-KiRoGrid
-            Set-KiRoResult ('' + $n + ' plugin sken(a) pokrenuto. Nalazi su dodati u glavnu tabelu.') 'Ok'
-            try { $pf.Close() } catch {}
+            try { $grid.Refresh() } catch {}
+            $added = $after - $before
+            $msg = ('' + $n + ' plugin sken(a) pokrenuto. Dodato nalaza: ' + $added + '. Pogledaj glavnu tabelu.')
+            Set-KiRoResult $msg 'Ok'
+            try { $lblRun.Text = $msg; $lblRun.ForeColor = Col $C.Ok } catch {}
+            # Dijagnosticki log: da se i u sandbox-u i kod korisnika vidi sta se desilo.
+            try {
+                $lg = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'KiRo_PC_Diagnostic_Logs'
+                New-Item -ItemType Directory -Force -Path $lg | Out-Null
+                Add-Content -LiteralPath (Join-Path $lg 'KiRo_plugin.log') -Value ((Get-Date).ToString('s') + '  POKRENI SVE PLUGINE: plugins=' + $n + ' before=' + $before + ' after=' + $after + ' added=' + $added) -Encoding UTF8
+            } catch {}
+            # Prozor ostaje otvoren da korisnik jasno vidi rezultat (ne "nestane"); zatvori ga ručno (X).
         } catch {
-            Set-KiRoResult ('Greska u plugin skeniranju: ' + $_.Exception.Message) 'Error'
+            $em = 'Greska u plugin skeniranju: ' + $_.Exception.Message
+            Set-KiRoResult $em 'Error'
+            try { $lblRun.Text = $em; $lblRun.ForeColor = Col $C.Danger } catch {}
         }
     })
 
