@@ -71,6 +71,10 @@ $LogFile = Join-Path $LogRoot "KiRo_Diagnostic_$Stamp.txt"
 if (-not $script:KiRoNoTranscript) { try { Start-Transcript -Path $LogFile -Force | Out-Null } catch {} }
 
 $script:Findings = New-Object System.Collections.ArrayList
+# Oznaka da li Add-Finding trenutno dodaje nalaze iz plugin skena (v4.2).
+# Koristi se da se plugin nalazi oznace sa Source='Plugin' i tako SAČUVAJU
+# kad god se glavni sken zavrsi (Complete-KiRoJob inace zameni $script:Findings).
+$script:_KiRoInPluginScan = $false
 $script:ScanDetails = [ordered]@{}
 $RepairBackupRoot = Join-Path $LogRoot "Repair_Backup_$Stamp"
 New-Item -ItemType Directory -Force -Path $RepairBackupRoot | Out-Null
@@ -130,6 +134,18 @@ function Load-KiRoPlugins {
 
 function Invoke-KiRoPluginScans {
     $ran = 0
+    # Ukloni prethodne plugin nalaze (Source='Plugin') da ne bi bilo duplikata
+    # pri vise pokretanja "POKRENI SVE PLUGINE". Ostavi sken nalaze netaknute.
+    if ($script:Findings -and $script:Findings.Count -gt 0) {
+        $kept = New-Object System.Collections.ArrayList
+        foreach ($f in @($script:Findings)) {
+            if (-not ($f.PSObject.Properties['Source'] -and [string]$f.Source -eq 'Plugin')) {
+                [void]$kept.Add($f)
+            }
+        }
+        $script:Findings = $kept
+    }
+    $script:_KiRoInPluginScan = $true
     foreach ($p in @($script:Plugins)) {
         if ($p.ScanScript) {
             try { & $p.ScanScript } catch {
@@ -138,6 +154,7 @@ function Invoke-KiRoPluginScans {
             $ran++
         }
     }
+    $script:_KiRoInPluginScan = $false
     return $ran
 }
 
@@ -170,6 +187,7 @@ function Add-Finding {
         [object]$Data = $null
     )
     $id = $script:Findings.Count + 1
+    $src = if ($script:_KiRoInPluginScan) { 'Plugin' } else { 'Scan' }
     [void]$script:Findings.Add([pscustomobject]@{
         ID = $id
         Severity = $Severity
@@ -179,6 +197,7 @@ function Add-Finding {
         FixAction = $FixAction
         SafeAutoFix = $SafeAutoFix
         Data = $Data
+        Source = $src
     })
 }
 

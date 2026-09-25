@@ -1012,7 +1012,13 @@ function Complete-KiRoJob {
         }
     }
 
+    # Sacuvaj plugin nalaze (ručno dodati preko PLUGINI prozora): glavni sken ih
+    # ne sme da obrise, jer $returned sadrzi SAMO rezultate skena. Bez ovoga,
+    # "POKRENI SVE PLUGINE" bi dodao nalaze koji bi nestali cim se sken zavrsi.
+    $oldPlugin = @($script:Findings | Where-Object { $_.PSObject.Properties['Source'] -and [string]$_.Source -eq 'Plugin' })
     $script:Findings = $returned
+    foreach ($p in $oldPlugin) { [void]$script:Findings.Add($p) }
+
     Renumber-KiRoFindings
     Populate-KiRoGrid
     Set-KiRoBusyUi $false
