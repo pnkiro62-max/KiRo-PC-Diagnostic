@@ -1881,26 +1881,51 @@ Set-Tip $btnConfirmYes 'Potvrdjuje popravku oznacenih stavki. Prvo se pravi Safe
 Set-Tip $btnConfirmNo 'Otkazuje popravku. Nista se ne menja i nista se ne brise.'
 
 function Show-KiRoPluginsForm {
-    if ($script:Plugins.Count -eq 0) {
-        Set-KiRoResult 'Nema ucitanih plugina. Dodaj .ps1 fajl u folder Plugins/.' 'Info'
-        return
-    }
     $pf = New-Object System.Windows.Forms.Form
     $pf.Text = 'KiRo v4.2 - Pluginovi'
-    $pf.Size = New-Object System.Drawing.Size(660,440)
-    $pf.MinimumSize = New-Object System.Drawing.Size(520,320)
+    $pf.Size = New-Object System.Drawing.Size(700,470)
+    $pf.MinimumSize = New-Object System.Drawing.Size(540,340)
     $pf.StartPosition = 'CenterParent'
     $pf.BackColor = Col $C.Bg
     $pf.Font = Fo 'Segoe UI' 9.5
     $pf.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::Dpi
 
+    $build = if ($script:KiRoBuild) { [string]$script:KiRoBuild } else { '?' }
+    $pdir  = if ($script:PluginsDir) { [string]$script:PluginsDir } else { '(nepoznato)' }
+
+    # Dijagnosticki log pri otvaranju prozora - ground truth o tome sta GUI vidi
+    # (broj plugina, putanja, verzija). Resava "nista se ne desi" jer dobijamo
+    # tacan podatak i kad korisnik pokrece stari/zastareli paket.
+    try {
+        $lg = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'KiRo_PC_Diagnostic_Logs'
+        New-Item -ItemType Directory -Force -Path $lg | Out-Null
+        Add-Content -LiteralPath (Join-Path $lg 'KiRo_plugin.log') -Value ((Get-Date).ToString('s') + '  OTVOREN PLUGINI PROZOR: plugins=' + $script:Plugins.Count + ' dir=' + $pdir + ' build=' + $build) -Encoding UTF8
+    } catch {}
+
     $head = New-Object System.Windows.Forms.Label
     $head.Dock = 'Top'
-    $head.Height = 46
-    $head.Padding = New-Object System.Windows.Forms.Padding(14,10,14,4)
-    $head.Text = ('Ucitano plugina: ' + $script:Plugins.Count + '.  Svaki je modul u folderu Plugins/ koji moze da doda nalaze u glavnu tabelu.')
-    $head.ForeColor = Col $C.Muted
+    $head.Height = 28
+    $head.Padding = New-Object System.Windows.Forms.Padding(14,7,14,2)
+    $head.Text = ('Ucitano plugina: ' + $script:Plugins.Count + '    |    Verzija: ' + $build)
+    $head.ForeColor = Col $C.Text
     $pf.Controls.Add($head)
+
+    # Putanja na kojoj su trazeni pluginovi - uvecbao "nista se ne desi" kada
+    # izvaceni paket ne sadrzi Plugins/ folder ili je raspakivan na pogresno mesto.
+    $diag = New-Object System.Windows.Forms.Label
+    $diag.Dock = 'Top'
+    $diag.Height = 46
+    $diag.Padding = New-Object System.Windows.Forms.Padding(14,2,14,2)
+    $diag.Text = ('Trazena putanja: ' + $pdir)
+    if ($script:Plugins.Count -eq 0) {
+        $diag.ForeColor = Col $C.Danger
+        $diag.Text += [Environment]::NewLine + 'NA 0 PLUGINA: taj folder ne sadrzi .ps1 fajlove. Dodaj ih pa ponovo pokreni KiRo.'
+        Set-KiRoResult ('Nema ucitanih plugina na: ' + $pdir) 'Info'
+    } else {
+        $diag.ForeColor = Col $C.Muted
+        $diag.Text += [Environment]::NewLine + 'Svaki modul moze da doda nalaze u glavnu tabelu (dugme ispod).'
+    }
+    $pf.Controls.Add($diag)
 
     $pg = New-Object System.Windows.Forms.DataGridView
     $pg.Dock = 'Fill'
@@ -1934,6 +1959,7 @@ function Show-KiRoPluginsForm {
     $btnRun = New-TopButton 'POKRENI SVE PLUGINE' 190 $C.Accent $C.HeadText $C.AccentDk $C.AccentDk ''
     $btnRun.Dock = 'Bottom'
     $btnRun.Margin = New-Object System.Windows.Forms.Padding(0)
+    if ($script:Plugins.Count -eq 0) { $btnRun.Enabled = $false }
     $btnRun.Add_Click({
         try {
             $before = @($script:Findings).Count

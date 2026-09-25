@@ -88,6 +88,11 @@ $script:RepairBackupLog = Join-Path $RepairBackupRoot "startup_repair_backup.jso
 # Loader ih automatski otkriva na startu - ne diramo ostatak koda.
 $script:Plugins = New-Object System.Collections.ArrayList
 $script:PluginsLoaded = $false
+# Oznaka build-a - GUI je prikazuje u PLUGINI prozoru da korisnik moze da potvrdi
+# da li pokrece novu verziju (zastareli izvaceni paket cesto pravi "nicta se ne desi").
+$script:KiRoBuild = 'v4.2 (2026-09-25-pluginfix)'
+# Putanja na kojoj su trazeni pluginovi - GUI je prikazuje radi dijagnostike.
+$script:PluginsDir = ''
 
 function Register-KiRoPlugin {
     param(
@@ -117,6 +122,7 @@ function Register-KiRoPlugin {
 
 function Load-KiRoPlugins {
     $pluginDir = Join-Path $PSScriptRoot 'Plugins'
+    $script:PluginsDir = $pluginDir
     $script:Plugins.Clear()
     if (-not (Test-Path -LiteralPath $pluginDir)) {
         $script:PluginsLoaded = $false
